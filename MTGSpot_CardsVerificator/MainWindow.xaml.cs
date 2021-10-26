@@ -25,12 +25,14 @@ namespace MTGSpot_CardsVerificator
     {
         public static List<Card> MTGSpotCardList { get; set; }
         public static List<Order> orders { get; set; }
+        public static List<Card> cards { get; set; }
 
         public MainWindow()
         {
             InitializeComponent();
 
             MTGSpotCardList = new List<Card>();
+            cards = new List<Card>();
         }
 
         private void WTB_Click(object sender, RoutedEventArgs e)
@@ -60,7 +62,7 @@ namespace MTGSpot_CardsVerificator
 
             foreach(DataColumn column in dane.Columns)
             {
-                if(column.Ordinal % 4 == 0 && orders.Where(x => x.Person == column.ColumnName).Count() == 0)
+                if(column.Ordinal % 4 == 0 && orders.Where(x => x.Person == column.ColumnName).Count() == 0 && column.Ordinal < 22)
                 {
                     orders.Add(new Order(column.ColumnName));
                 }
@@ -85,7 +87,15 @@ namespace MTGSpot_CardsVerificator
                 }
             }
 
-            CardsWTB.ItemsSource = orders.Where(x => x.Person == "Seba").FirstOrDefault().Cards;
+            foreach(Order order in orders)
+            {
+                foreach(Card card in order.Cards)
+                {
+                    cards.Add(card);
+                }
+            }
+
+            CardsWTB.ItemsSource = cards;//orders.Where(x => x.Person == "Seba").FirstOrDefault().Cards;
         }
 
         private void ListMTGSpot_Click(object sender, RoutedEventArgs e)
@@ -173,8 +183,8 @@ namespace MTGSpot_CardsVerificator
                     Card foundCard = order.Cards.Where(x => card.Name.Contains(x.Name)).FirstOrDefault();
                     if (foundCard != null)
                     {
-                        MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().Amount -= foundCard.Amount;
-                        MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().Price -= foundCard.Price;
+                        //MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().Amount -= foundCard.Amount;
+                        //MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().Price -= foundCard.FullPrice;
                     }
                     else
                     {
@@ -182,12 +192,12 @@ namespace MTGSpot_CardsVerificator
                     }
                 }
 
-                /*foreach(Card card in order.Cards.Where(x => MTGSpotCardList.Where(y => y.Name.Contains(x.Name)).Count() == 0))
+                foreach(Card card in order.Cards.Where(x => MTGSpotCardList.Where(y => y.Name.Contains(x.Name)).Count() == 0))
                 {
                     Card newCard = new Card(card);
                     newCard.Amount -= card.Amount * 2;
                     MTGSpotCardListBraki.Add(newCard);
-                }*/
+                }
             }
 
             foreach (Card card in MTGSpotCardList)
@@ -195,8 +205,16 @@ namespace MTGSpot_CardsVerificator
                 bool isCardFound = false;
                 foreach (Order order in orders)
                 {
-                    if (order.Cards.Where(x => card.Name.Contains(x.Name)).Count() != 0)
+                    Card foundCard = order.Cards.Where(x => card.Name.Contains(x.Name)).FirstOrDefault();
+                    if (foundCard != null)
                     {
+                        //Console.WriteLine("Amount: " + foundCard.Amount);
+                        //Console.WriteLine("FullPrice: " + foundCard.FullPrice);
+                        //Console.WriteLine("Amount 2: " + MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().Amount);
+                        //Console.WriteLine("FullPrice 2: " + MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().FullPrice);
+                        MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().Amount -= foundCard.Amount;
+                        MTGSpotCardListBraki.Where(x => x == card).FirstOrDefault().FullPrice -= foundCard.FullPrice;
+
                         continue;
                     }
                     else
@@ -213,7 +231,7 @@ namespace MTGSpot_CardsVerificator
                 }
             }
 
-            foreach (Card card in MTGSpotCardListBraki.Where(x => x.Amount != 0 && x.Price != 0))
+            foreach (Card card in MTGSpotCardListBraki.Where(x => x.Amount != 0 || x.FullPrice != 0))
             {
                 stringBuilder.AppendLine(card.ToString());
             }
